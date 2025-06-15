@@ -47,10 +47,10 @@ def main():
 
     #######INPUT#########
     cosmo_model=1               
-    stan_code_file = './stan_code_fs8.stan' #your stan code file
+    stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=1000
+    itera=1500
     chains=4
     n_jobs = 4
 
@@ -464,7 +464,7 @@ def main():
     #                   iter=itera, chains=chains, n_jobs = n_jobs, refresh = 20, 
     #                   init = init_fn, control=dict(max_treedepth=11,adapt_delta = 0.85))
 
-    model.sample(data=stan_data,
+    fit = model.sample(data=stan_data,
              iter_sampling=itera,
              chains=chains,
              parallel_chains=n_jobs,
@@ -473,46 +473,51 @@ def main():
              max_treedepth=11,
              adapt_delta=0.85, show_progress=True)
 
-    #save results 
-    fit_params = fit.extract(permuted = True)
-    pickle.dump(fit_params, gzip.open(fit_file, "wb"))
-    try:
-        fit_params = filter_fit_params(fit_params, "MB", chains, itera/2) # burns the first half of the chain, so iter/2
-    except:
-        print("Couldn't filter bad chains! One or more chains may be bad!")
+    df = fit.draws_pd()
+    df.to_pickle("/Users/akim/Projects/union3_release/output/result.pkl")
+
+    fit.save_csvfiles(dir="/Users/akim/Projects/union3_release/output")
+
+    # #save results 
+    # fit_params = fit.extract(permuted = True)
+    # pickle.dump(fit_params, gzip.open(fit_file, "wb"))
+    # try:
+    #     fit_params = filter_fit_params(fit_params, "MB", chains, itera/2) # burns the first half of the chain, so iter/2
+    # except:
+    #     print("Couldn't filter bad chains! One or more chains may be bad!")
 
 
 
-    try:
-        mu_cov = np.cov(fit_params["mu_zbins"].T)
-        whole_mat = np.zeros([len(mu_cov) + 1]*2, dtype=np.float64)
-        whole_mat[1:, 1:] = np.linalg.inv(mu_cov)
-        whole_mat[1:, 0] = np.median(fit_params["mu_zbins"], axis = 0)
-        whole_mat[0, 1:] = stan_data["zbins"]
-        np.save('mu_cov.npy',whole_mat)
+    # try:
+    #     mu_cov = np.cov(fit_params["mu_zbins"].T)
+    #     whole_mat = np.zeros([len(mu_cov) + 1]*2, dtype=np.float64)
+    #     whole_mat[1:, 1:] = np.linalg.inv(mu_cov)
+    #     whole_mat[1:, 0] = np.median(fit_params["mu_zbins"], axis = 0)
+    #     whole_mat[0, 1:] = stan_data["zbins"]
+    #     np.save('mu_cov.npy',whole_mat)
          
-    except:
-        print("Couldn't save whole_mat")
+    # except:
+    #     print("Couldn't save whole_mat")
 
 
-    del_keys = []
-    for key in fit_params:
-        sh = np.array(fit_params[key].shape)
+    # del_keys = []
+    # for key in fit_params:
+    #     sh = np.array(fit_params[key].shape)
 
-        if np.any(sh[1:] > 10000):
-            print(key, " is too big to save!", sh)
-            del_keys.append(key)
+    #     if np.any(sh[1:] > 10000):
+    #         print(key, " is too big to save!", sh)
+    #         del_keys.append(key)
 
-    print("del_keys", del_keys)
-    for key in del_keys:
-        del fit_params[key]
+    # print("del_keys", del_keys)
+    # for key in del_keys:
+    #     del fit_params[key]
 
         
-    pickle.dump(fit_params, gzip.open(fit_file, "wb"))
-    print("I hope you have a log file:")
+    # pickle.dump(fit_params, gzip.open(fit_file, "wb"))
+    # print("I hope you have a log file:")
 
     try:
-        print(fit.stansummary(digits_summary=5))
+        print(fit.summary())
     except:
         print("Couldn't print fit! Something is very wrong!")
 

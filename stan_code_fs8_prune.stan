@@ -156,8 +156,8 @@ transformed parameters {
 
     real alpha;
     real beta_B;
-    real beta_R_high;
-    real beta_R_low;
+    // real beta_R_high;
+    // real beta_R_low;
     //real <lower = 0. > sig_v;
     //real sig_v_m;
     array[3] vector [n_sne] sig_v;
@@ -165,18 +165,18 @@ transformed parameters {
 
     real alpha_eff;
     real beta_eff;
-    real p_high_mass_eff;
+    // real p_high_mass_eff;
 
     //vector [n_sne] true_cR;
 
-    vector [n_sne] x1_star_by_SN;
-    vector [n_sne] R_x1_by_SN;
-    vector [n_sne] tau_x1_by_SN;
+    // vector [n_sne] x1_star_by_SN;
+    // vector [n_sne] R_x1_by_SN;
+    // vector [n_sne] tau_x1_by_SN;
 
-    vector [n_sne] c_star_by_SN;
-    vector [n_sne] R_c_by_SN;
-    vector [n_sne] tau_c_by_SN;
-    vector [n_calib] calibs_fs8;
+    // vector [n_sne] c_star_by_SN;
+    // vector [n_sne] R_c_by_SN;
+    // vector [n_sne] tau_c_by_SN;
+    // vector [n_calib] calibs_fs8;
     vector [n_calib] calibs;
 
 
@@ -191,17 +191,17 @@ transformed parameters {
     vector [n_sne] inl_loglike_by_SN;
     //vector [n_sne] PointPosteriors;
 
-    real this_MB;
-    real this_norm_LL;
+    // real this_MB;
+    // real this_norm_LL;
 
-    vector [3] dz_deriv_term;
-    real dz_term;
-    real dz_Hinv_term;
+    // vector [3] dz_deriv_term;
+    // real dz_term;
+    // real dz_Hinv_term;
 
-    vector [n_gauss] tmploglike_x1;
+    // vector [n_gauss] tmploglike_x1;
     //vector [n_gauss] tmploglike_c;
 
-    vector [n_zbins] r_comove_bins;
+    // vector [n_zbins] r_comove_bins;
 
     // -------------Begin numerical integration-----------------
 
@@ -359,12 +359,12 @@ transformed parameters {
 
         //true_cR[i] = true_cR_unit[i]*tau_c_by_SN[i];
 
-
-        if (MB_by_sample == 1) {
-            this_MB = MB[sample_list[i]];
-        } else {
-            this_MB = MB[1];
-        }
+        
+        // if (MB_by_sample == 1) {
+        //     this_MB = MB[sample_list[i]];
+        // } else {
+        //     this_MB = MB[1];
+        // }
 
 
 	// mobs_by_SN_except_c_R[i] = this_MB + model_mu[i] + mobs_cut0[i] - alpha*x1_star_by_SN[i] + (beta_B + mobs_cut1[i])*c_star_by_SN[i] - delta_0*p_high_mass_eff;
@@ -373,7 +373,7 @@ transformed parameters {
     //                                   + (alpha*R_x1_by_SN[i])^2 + ((beta_B + mobs_cut1[i])*R_c_by_SN[i])^2;
 
 
-        model_mBx1c[i][1] = this_MB + model_mu[i] - alpha*true_x1[i] + beta_B*true_cB[i]; //+(beta_R_low*(1 - p_high_mass_eff); 
+        model_mBx1c[i][1] = MB[1] + model_mu[i] - alpha*true_x1[i] + beta_B*true_cB[i]; //+(beta_R_low*(1 - p_high_mass_eff); 
                             //+ beta_R_high*p_high_mass_eff)*true_cR[i] - delta_0*p_high_mass_eff;
         model_mBx1c[i][2] = true_x1[i];
         model_mBx1c[i][3] = true_cB[i]; //+ true_cR[i];
