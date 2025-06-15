@@ -250,7 +250,8 @@ transformed parameters {
         //     model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.1586133146;
         // }
         for (i in 1:n_sne) {
-            model_mu[i] = 5.*log10((1. + zhelio[i] )*(r_com_sort[unsort_inds[i] + 1] )) + 43.1586133146;
+             //43.1586133146 ; # to get to H0=67.64
+            model_mu[i] = 5.*log10((1. + zhelio[i] )*(r_com_sort[unsort_inds[i] + 1] )) + 43.229877553; 
         }
 
     }
@@ -269,7 +270,7 @@ transformed parameters {
     //     }
 	
     //     model_mu = dmu_dbin * r_comove_bins;
-	// for (i in 1:n_sne) {
+	// for (i in 1:n_sne) {view.p
 	//     model_mu[i] = 5.*log10((1. + zhelio[i])*model_mu[i]) + 43.1586133146;
     //     }
     // }
@@ -359,7 +360,7 @@ transformed parameters {
 
         //true_cR[i] = true_cR_unit[i]*tau_c_by_SN[i];
 
-        
+
         // if (MB_by_sample == 1) {
         //     this_MB = MB[sample_list[i]];
         // } else {

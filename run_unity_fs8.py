@@ -50,7 +50,7 @@ def main():
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=1500
+    itera=1000
     chains=4
     n_jobs = 4
 
@@ -61,6 +61,7 @@ def main():
     #input cosmology for PV covariance
     cosmo_dic = {"h":0.6774, "omega_b":0.02230, "omega_cdm":0.1188,"sigma8":0.8159, "n_s":0.9667}#, 'mnu':0.0}
     cosmo= acosmo.FlatLambdaCDM(H0=67.74, Om0=0.3089)
+
 
     #input parameter for PV covariance
     sigma_u = 21
