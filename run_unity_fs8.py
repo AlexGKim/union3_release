@@ -312,17 +312,20 @@ def main():
                                                     coordinates_velocity=[wfd.ra.values, wfd.dec.values, rcom], 
                                                     kmin=kmin, number_worker=optimal_processes,)
 
-    #from CVV to Cmm
 
-    Hr = cosmo.H(wfd.zobs.values).value * cosmo.comoving_distance(wfd.zobs.values).value
-    vcoeff = np.diag(-5 / (np.log(10) * _C_LIGHT_KMS_) * ((1 + wfd.zobs.values) * _C_LIGHT_KMS_ / Hr - 1))
+
+    # #from CVV to Cmm
+
+    # Hr = cosmo.H(wfd.zobs.values).value * cosmo.comoving_distance(wfd.zobs.values).value
+    # vcoeff = np.diag(-5 / (np.log(10) * _C_LIGHT_KMS_) * ((1 + wfd.zobs.values) * _C_LIGHT_KMS_ / Hr - 1))
 
 
     vel_cov = COV.compute_covariance_sum({'fs8':1,'sigv':0},np.zeros(len(wfd)))
-    COV_mm = np.array(vcoeff.T @ vel_cov @ vcoeff)
+    # COV_mm = np.array(vcoeff.T @ vel_cov @ vcoeff)
 
     #eigenvactors of pv covariance
-    _,s,v=np.linalg.svd(COV_mm)
+    _,s,v=np.linalg.svd(vel_cov)
+     # _,s,v=np.linalg.svd(COV_mm)
     vt = v.T
 
     d_mBx1c_dcalib=np.zeros([NSN,3,len(wfd)], dtype=float64)

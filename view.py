@@ -7,6 +7,6 @@ columns = ["fs8_eff","Om","MB[1]","alpha", "beta_B",'sigma_int[1]','sigma_int[2]
 df=df[columns]
 c = ChainConsumer()
 c.add_chain(Chain(samples=df, name="An Example Contour"))  
-c.add_truth(Truth(location={"fs8_eff":1,"Om":0.3089,"MB[1]":-19.053,"alpha":0.14, "beta_B":2.9,"sigma_int[1]":0.02,"sigma_int[2]":0.05}))
+c.add_truth(Truth(location={"fs8_eff":1,"Om":0.3089,"MB[1]":-19.12,"alpha":0.14, "beta_B":2.9,"sigma_int[1]":0.02,"sigma_int[2]":0.05}))
 fig = c.plotter.plot(columns=columns)
 fig.savefig("temp.png")

@@ -4,6 +4,62 @@
 // Version 1.7 (Jan-26-2024). Fixed parameter limits on selection-effect model outl_mBx1c_uncertainties.
 // Version 1.71 (Sep-13-2024). Added lower limit to mobs_var_by_SN_except_c_R Thanks Aaron Do!
 
+functions{
+    vector calc_model_mu(int n_sne, int cosmo_model, int nzadd, real Om, array[] real redshifts_sort_fill, array[] int unsort_inds, array[] real zhelio){
+        vector [n_sne]  model_mu;
+        array[2*(n_sne + nzadd) - 1] real Hinv_sort_fill;
+        array[n_sne + nzadd] real r_com_sort;
+        if ((cosmo_model == 1) || (cosmo_model == 3) || (cosmo_model == 5)) {
+            for (i in 1: 2*(n_sne + nzadd) - 1) {    // Inverse Hubble parameter
+                if (cosmo_model == 1) {
+                    Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om) );
+                }
+                // if (cosmo_model == 3) {
+                //     Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE)) );
+                // }
+                // if (cosmo_model == 5) {
+                //     Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
+                //                         + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
+                // }
+            }
+
+            // Integrate comoving r using Simpson's rule
+
+            r_com_sort[1] = 0.; // Redshift = 0 should be first element!
+            for (i in 2:(n_sne + nzadd)) {
+                r_com_sort[i] = r_com_sort[i - 1] + (Hinv_sort_fill[2*i - 3] + 4.*Hinv_sort_fill[2*i - 2] + Hinv_sort_fill[2*i - 1])*(redshifts_sort_fill[2*i - 1] - redshifts_sort_fill[2*i - 3])/6.;
+            }
+
+
+            // for (i in 1:n_sne) {
+            //     if (photoz_inds[i] == 0) {
+            //         dz_term = 0.;
+            //     dz_Hinv_term = 0.;
+            //     } else {
+            //         dz_term = dz[photoz_inds[i]];
+            //         if (cosmo_model == 1) {
+            //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om) );
+            //         }
+            //         if (cosmo_model == 3) {
+            //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om)*pow(1. + redshifts[i], 3.*(1 + wDE)) );
+            //         }
+            //         if (cosmo_model == 5) {
+            //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
+            //                                            + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
+            //         }
+            //     }
+            //     model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.1586133146;
+            // }
+            for (i in 1:n_sne) {
+                 //43.1586133146 ; # to get to H0=67.64
+                model_mu[i] = 5.*log10((1. + zhelio[i] )*(r_com_sort[unsort_inds[i] + 1] )) + 43.229877553; 
+            }
+
+        }
+        return model_mu; 
+    }
+}
+
 
 data {
     int<lower=0> n_sne; // number of SNe
@@ -183,8 +239,8 @@ transformed parameters {
     // vector [n_sne] mobs_by_SN_except_c_R;
     // vector <lower = 0.0001> [n_sne] mobs_var_by_SN_except_c_R; // Thanks Aaron Do!
 
-    array[2*(n_sne + nzadd) - 1] real Hinv_sort_fill;
-    array[n_sne + nzadd] real r_com_sort;
+    // array[2*(n_sne + nzadd) - 1] real Hinv_sort_fill;
+    // array[n_sne + nzadd] real r_com_sort;
     vector [n_sne]  model_mu;
 
     // vector [n_sne] outl_loglike_by_SN;
@@ -205,82 +261,82 @@ transformed parameters {
 
     // -------------Begin numerical integration-----------------
 
-
+    model_mu = calc_model_mu(n_sne, cosmo_model, nzadd, Om, redshifts_sort_fill, unsort_inds, zhelio);
     
 
-    if ((cosmo_model == 1) || (cosmo_model == 3) || (cosmo_model == 5)) {
-        for (i in 1: 2*(n_sne + nzadd) - 1) {    // Inverse Hubble parameter
-            if (cosmo_model == 1) {
-                Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om) );
-            }
-            // if (cosmo_model == 3) {
-            //     Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE)) );
-            // }
-            // if (cosmo_model == 5) {
-            //     Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
-		    //                         + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
-            // }
-        }
-
-        // Integrate comoving r using Simpson's rule
-
-        r_com_sort[1] = 0.; // Redshift = 0 should be first element!
-        for (i in 2:(n_sne + nzadd)) {
-            r_com_sort[i] = r_com_sort[i - 1] + (Hinv_sort_fill[2*i - 3] + 4.*Hinv_sort_fill[2*i - 2] + Hinv_sort_fill[2*i - 1])*(redshifts_sort_fill[2*i - 1] - redshifts_sort_fill[2*i - 3])/6.;
-        }
-
-
-        // for (i in 1:n_sne) {
-        //     if (photoz_inds[i] == 0) {
-        //         dz_term = 0.;
-	    //     dz_Hinv_term = 0.;
-        //     } else {
-        //         dz_term = dz[photoz_inds[i]];
-        //         if (cosmo_model == 1) {
-        //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om) );
-        //         }
-        //         if (cosmo_model == 3) {
-        //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om)*pow(1. + redshifts[i], 3.*(1 + wDE)) );
-        //         }
-        //         if (cosmo_model == 5) {
-        //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
-		//                                            + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
-        //         }
-        //     }
-        //     model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.1586133146;
-        // }
-        for (i in 1:n_sne) {
-             //43.1586133146 ; # to get to H0=67.64
-            model_mu[i] = 5.*log10((1. + zhelio[i] )*(r_com_sort[unsort_inds[i] + 1] )) + 43.229877553; 
-        }
-
-    }
-    // if (cosmo_model == 2) { // binned mu
-    //     model_mu = dmu_dbin * mu_zbins + mu_const;
-    //     for (i in 1:n_sne) {
-    //         if (photoz_inds[i] > 0) {
-    //             // model_mu[i] = model_mu[i] + dz[photoz_inds[i]] * dmudz_dbin[i] * mu_zbins + mu_const;
+    // if ((cosmo_model == 1) || (cosmo_model == 3) || (cosmo_model == 5)) {
+    //     for (i in 1: 2*(n_sne + nzadd) - 1) {    // Inverse Hubble parameter
+    //         if (cosmo_model == 1) {
+    //             Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om) );
     //         }
+    //         // if (cosmo_model == 3) {
+    //         //     Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE)) );
+    //         // }
+    //         // if (cosmo_model == 5) {
+    //         //     Hinv_sort_fill[i] = 1./sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
+	// 	    //                         + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
+    //         // }
     //     }
-    // }
 
-    // if (cosmo_model == 6) { // binned comoving distance
-    //     for (i in 1:n_zbins) {
-    //         r_comove_bins[i] = 10^(0.2*(mu_zbins[i] - 43.1586133146))  /  (1. + zbins[i]);
-    //     }
-	
-    //     model_mu = dmu_dbin * r_comove_bins;
-	// for (i in 1:n_sne) {view.p
-	//     model_mu[i] = 5.*log10((1. + zhelio[i])*model_mu[i]) + 43.1586133146;
-    //     }
-    // }
+    //     // Integrate comoving r using Simpson's rule
 
-    // if (cosmo_model == 4) {
+    //     r_com_sort[1] = 0.; // Redshift = 0 should be first element!
+    //     for (i in 2:(n_sne + nzadd)) {
+    //         r_com_sort[i] = r_com_sort[i - 1] + (Hinv_sort_fill[2*i - 3] + 4.*Hinv_sort_fill[2*i - 2] + Hinv_sort_fill[2*i - 1])*(redshifts_sort_fill[2*i - 1] - redshifts_sort_fill[2*i - 3])/6.;
+    //     }
+
+
+    //     // for (i in 1:n_sne) {
+    //     //     if (photoz_inds[i] == 0) {
+    //     //         dz_term = 0.;
+	//     //     dz_Hinv_term = 0.;
+    //     //     } else {
+    //     //         dz_term = dz[photoz_inds[i]];
+    //     //         if (cosmo_model == 1) {
+    //     //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om) );
+    //     //         }
+    //     //         if (cosmo_model == 3) {
+    //     //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om)*pow(1. + redshifts[i], 3.*(1 + wDE)) );
+    //     //         }
+    //     //         if (cosmo_model == 5) {
+    //     //             dz_Hinv_term = dz[photoz_inds[i]]/sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
+	// 	//                                            + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
+    //     //         }
+    //     //     }
+    //     //     model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.1586133146;
+    //     // }
     //     for (i in 1:n_sne) {
-    //         model_mu[i] = 5.*log10((1. + zhelio[i])*redshifts[i]/(1. + redshifts[i]) * (1. + (1./2.)*(1 - q0)*redshifts[i] - (1./6.)*(1. - q0 - 3.*q0*q0 + j0) * redshifts[i]*redshifts[i])
-	//                            ) + 43.1586133146; // Equation 19 of Visser
+    //          //43.1586133146 ; # to get to H0=67.64
+    //         model_mu[i] = 5.*log10((1. + zhelio[i] )*(r_com_sort[unsort_inds[i] + 1] )) + 43.229877553; 
     //     }
+
     // }
+    // // if (cosmo_model == 2) { // binned mu
+    // //     model_mu = dmu_dbin * mu_zbins + mu_const;
+    // //     for (i in 1:n_sne) {
+    // //         if (photoz_inds[i] > 0) {
+    // //             // model_mu[i] = model_mu[i] + dz[photoz_inds[i]] * dmudz_dbin[i] * mu_zbins + mu_const;
+    // //         }
+    // //     }
+    // // }
+
+    // // if (cosmo_model == 6) { // binned comoving distance
+    // //     for (i in 1:n_zbins) {
+    // //         r_comove_bins[i] = 10^(0.2*(mu_zbins[i] - 43.1586133146))  /  (1. + zbins[i]);
+    // //     }
+	
+    // //     model_mu = dmu_dbin * r_comove_bins;
+	// // for (i in 1:n_sne) {view.p
+	// //     model_mu[i] = 5.*log10((1. + zhelio[i])*model_mu[i]) + 43.1586133146;
+    // //     }
+    // // }
+
+    // // if (cosmo_model == 4) {
+    // //     for (i in 1:n_sne) {
+    // //         model_mu[i] = 5.*log10((1. + zhelio[i])*redshifts[i]/(1. + redshifts[i]) * (1. + (1./2.)*(1 - q0)*redshifts[i] - (1./6.)*(1. - q0 - 3.*q0*q0 + j0) * redshifts[i]*redshifts[i])
+	// //                            ) + 43.1586133146; // Equation 19 of Visser
+    // //     }
+    // // }
 
 
     // -------------End numerical integration---------------
@@ -425,7 +481,7 @@ transformed parameters {
 	// 				    obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
 	// 				    mobs_cut_sigmas[sample_list[i]])
     //                                       - log(this_norm_LL); //No calibration in this term, see above comment!
-        inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs | model_mBx1c[i], model_mBx1c_cov[i]);
+        inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) * 299792.458/Hr[i]) - 1 ) | model_mBx1c[i], model_mBx1c_cov[i]);
     // inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs + dz_deriv_term | model_mBx1c[i], model_mBx1c_cov[i]);
                       // + normal_log(true_cB[i], c_star_by_SN[i], R_c_by_SN[i])
                       //  + log_sum_exp(tmploglike_x1) // + log_sum_exp(tmploglike_c)
@@ -472,7 +528,7 @@ model {
 	//  //Omw0wa_vect ~ multi_normal(BAOCMB_Om_w0_wa_mean, BAOCMB_Om_w0_wa_covmatrix);
     // }
 
-    MB ~ normal(-19, 0.3);
+    MB ~ normal(-19.12, 0.3);
     // delta_0 ~ normal(0.0, 0.2);
     // mobs_cuts ~ normal(est_mobs_cuts, 0.5);
     // mobs_cut_sigmas ~ normal(est_mobs_sigmas, 0.25);
