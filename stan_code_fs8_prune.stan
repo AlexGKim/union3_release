@@ -505,6 +505,8 @@ model {
     //sigma_int[1] ~ normal(0.02, 0.0001);
 
     //outl_frac ~ lognormal(outl_frac_prior_lnmean, outl_frac_prior_lnwidth);
-
+    fs8_eff ~ cauchy(0,10);
+    sigma_v ~ cauchy(0,10);
+    sigma_int ~ cauchy(0,10);
     
     }
