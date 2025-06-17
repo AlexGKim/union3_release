@@ -50,7 +50,8 @@ def main():
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=1000
+    itera=500
+    itera_warm = 500
     chains=4
     n_jobs = 4
 
@@ -324,9 +325,10 @@ def main():
     # COV_mm = np.array(vcoeff.T @ vel_cov @ vcoeff)
 
     #eigenvactors of pv covariance
-    _,s,v=np.linalg.svd(vel_cov)
+    _,s,vt=np.linalg.svd(vel_cov)
+
      # _,s,v=np.linalg.svd(COV_mm)
-    vt = v.T
+    # vt = v.T
 
     d_mBx1c_dcalib=np.zeros([NSN,3,len(wfd)], dtype=float64)
 
@@ -373,7 +375,7 @@ def main():
                      "obs_mBx1c": obs_mBx1c,
                      "obs_mBx1c_cov": mBx1c_cov,
                   
-                    "n_photoz": 0,
+                     "n_photoz": 0,
                      "photo_z0": [],
                      "photo_dz": [],
                      "spike_redshift_prob": [0.8]*0,
@@ -470,6 +472,7 @@ def main():
 
     fit = model.sample(data=stan_data,
              iter_sampling=itera,
+             iter_warmup=itera_warm,
              chains=chains,
              parallel_chains=n_jobs,
              # refresh=20,

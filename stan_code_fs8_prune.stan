@@ -565,5 +565,5 @@ model {
     sigma_v ~ cauchy(0,10);
     sigma_int ~ cauchy(0,10);
     
-    target += n_sne/2*log(fs8_eff);
+    // target += n_sne/2*log(fs8_eff);
     }
