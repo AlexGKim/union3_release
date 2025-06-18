@@ -1,6 +1,6 @@
 import multiprocessing
 from matplotlib import use
-use("PDF")
+# use("PDF")
 import pickle
 from numpy import *
 import numpy as np
@@ -239,6 +239,7 @@ def main():
 
     ddf=pd.read_parquet('snsim_highz.parquet')
     df=pd.read_parquet('snsim_lowz.parquet')
+    df = df[df["zcos"]< 0.1]
 
 
     #remove SN in the same host for the lowz sample
