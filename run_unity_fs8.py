@@ -56,7 +56,7 @@ def main():
     n_jobs = 4
 
     #txt file to save results and pickle file to save the chains
-    sys.stdout = open('res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.txt', 'w')
+    # sys.stdout = open('res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.txt', 'w')
     fit_file='res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.pickle'
 
     #input cosmology for PV covariance
@@ -239,7 +239,6 @@ def main():
 
     ddf=pd.read_parquet('snsim_highz.parquet')
     df=pd.read_parquet('snsim_lowz.parquet')
-    df = df[df["zcos"]< 0.1]
 
 
     #remove SN in the same host for the lowz sample
@@ -326,7 +325,9 @@ def main():
     # COV_mm = np.array(vcoeff.T @ vel_cov @ vcoeff)
 
     #eigenvactors of pv covariance
-    _,s,vt=np.linalg.svd(vel_cov)
+
+    # _,s,vt1=np.linalg.svd(vel_cov)
+    _,s,vt=np.linalg.svd(vel_cov,hermitian=True)
 
      # _,s,v=np.linalg.svd(COV_mm)
     # vt = v.T

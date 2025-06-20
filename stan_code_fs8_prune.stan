@@ -270,8 +270,8 @@ transformed parameters {
     // array[3] vector [n_sne] sig_v;
     //vector [3,n_highz] sig_v[n_samples];
 
-    real alpha_eff;
-    real beta_eff;
+    // real alpha_eff;
+    // real beta_eff;
     // real p_high_mass_eff;
 
     //vector [n_sne] true_cR;
@@ -515,7 +515,7 @@ model {
 
     calibs_i ~ normal(0, 1);
 
-    sig_v_i ~ normal(0, 1);
+    // sig_v_i ~ normal(0, 1);
 
     //  if (cosmo_model == 2) {
     //   MB ~ normal(-19, 0.001);
