@@ -75,7 +75,7 @@ functions{
                            + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) );
                     }
                 }
-                model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.1586133146;
+                model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.22987755309658; //43.1586133146; h0=0.6774
             }
         }
         if (cosmo_model == 2) { // binned mu
@@ -489,7 +489,10 @@ model {
         //                  obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
         //                  mobs_cut_sigmas[sample_list[i]])
         //                                       - log(this_norm_LL); //No calibration in this term, see above comment!
-        inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) * 299792.458/Hr[i]) - 1 ) | model_mBx1c[i], model_mBx1c_cov[i]);
+
+        // there is a bug here.  Hr is dependent on cosmology not constant as it is here
+        inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] |
+            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) * 299792.458/Hr[i]) - 1 ) , model_mBx1c_cov[i]);
         // inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs + dz_deriv_term | model_mBx1c[i], model_mBx1c_cov[i]);
         // + normal_log(true_cB[i], c_star_by_SN[i], R_c_by_SN[i])
         //  + log_sum_exp(tmploglike_x1) // + log_sum_exp(tmploglike_c)
