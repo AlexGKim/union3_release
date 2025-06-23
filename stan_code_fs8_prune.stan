@@ -73,7 +73,7 @@ functions{
                     }
                 }
                 model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.22987755309658; //43.1586133146; h0=0.6774
-                Hr[i] =  299792.458 * sqrt(Om*pow(1+redshifts[i],3) + (1-Om)) * r_com_sort[unsort_inds[i] + 1];
+                Hr[i] = sqrt(Om*pow(1+redshifts[i],3) + (1-Om)) * r_com_sort[unsort_inds[i] + 1];
             }
         }
         if (cosmo_model == 2) { // binned mu
@@ -181,6 +181,9 @@ transformed data {
     vector [n_gauss] exp_approx_width = [0.06596419371844692, 0.1910889454034621, 0.45516250820784515, 1.0637414822809306]';
 
 
+    real a_ = 0.51;
+    real K_ = 0.87;
+    real deltaz_= 1/ (1/K_  +1);
     // vector [n_gauss] exp_approx_norm = [0.24410438, 0.43274856, 0.32314706]';
     // vector [n_gauss] exp_approx_pos = [0.16913558, 0.68695591, 1.9434773]';
     // vector [n_gauss] exp_approx_width = [0.11070724, 0.330062, 0.96505958]';
@@ -225,8 +228,9 @@ transformed parameters {
 
 model {
     vector [3] Omw0wa_vect;
+
     // vector[n_sne] model_mu;
-    array[2] vector[n_sne] f_ans; 
+    array[2] vector[n_sne] model_mu_Hr; 
     array[n_sne] vector [3] model_mBx1c;
     array[n_sne] matrix [3,3] model_mBx1c_cov;
 
@@ -234,18 +238,17 @@ model {
     array[3] vector [n_sne] sig_v;
     vector [n_sne] inl_loglike_by_SN;
 
-    f_ans = calc_model_mu(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
+    model_mu_Hr = calc_model_mu(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
 
     model_mBx1c_cov = obs_mBx1c_cov;
 
-    // model_mBx1c_cov_outl = obs_mBx1c_cov;
     // sigmaV part
     for (i in 1:n_sne) {
         if (redshifts[i] < 0.1) {
-            sig_v[1][i]= (5/log(10.)) * (sigma_v / 299792.458) *(((1.+redshifts[i]) * 299792.458/f_ans[2][i]) - 1 );
+            sig_v[1][i]= (5/log(10.)) * (sigma_v / 299792.458) *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 );
         }
         else {
-            sig_v[1][i]= (5/log(10.)) * (300 / 299792.458) *(((1.+redshifts[i]) * 299792.458 /f_ans[2][i]) - 1 );
+            sig_v[1][i]= (5/log(10.)) * (300 / 299792.458) *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 );
         }
         sig_v[2][i]= 0 ;
         sig_v[3][i]= 0 ;
@@ -263,18 +266,16 @@ model {
         }
 
         // model_mBx1c[i][1] = MB[1] + model_mu[i] - alpha*true_x1[i] + beta_B*true_cB[i]; 
-        model_mBx1c[i][1] = MB[1] + f_ans[1][i] - alpha*true_x1[i] + beta_B*true_cB[i]; 
+        model_mBx1c[i][1] = MB[1] + model_mu_Hr[1][i] - alpha*true_x1[i] + beta_B*true_cB[i]; 
         model_mBx1c[i][2] = true_x1[i];
         model_mBx1c[i][3] = true_cB[i]; //+ true_cR[i];
 
-        // there is a bug here.  Hr is dependent on cosmology not constant as it is here
         inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] |
-            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) * 299792.458/f_ans[2][i]) - 1 ) , model_mBx1c_cov[i]);
+            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) , model_mBx1c_cov[i]);
+    //                           sqrt(L) ev_i  * fs8_n z * dm/dv  
  
     }
                                         
-
-    // ** Change by Alex : no outliers
     target += inl_loglike_by_SN;
 
     calibs_i ~ normal(0, 1);
@@ -284,5 +285,15 @@ model {
     fs8_eff ~ cauchy(0,10);
     sigma_v ~ cauchy(0,10);
     sigma_int ~ cauchy(0,10);
+
+
+    target += log_sum_exp(log(a_-a_*deltaz_ + deltaz_) + normal_lpdf(true_x1 | 0.37, 0.61), log(1-deltaz_) + log(1-a_) + normal_lpdf(true_x1 | -1.22, 0.56));
+    for (i in 1:n_sne) {
+        if (true_cB[i] >= -0.055){
+            target += normal_lpdf(true_cB[i] | -0.055, 0.15);
+        } else {
+            target += normal_lpdf(true_cB[i] | -0.055, 0.023);
+        }
+    }
 
 }

@@ -349,7 +349,7 @@ def main():
                      "redshift_coeffs": redshift_coeffs,
                      "z_low": wfd.zobs.values,
                      "z_high": ddf.zobs.values,
-                     "Hr" : cosmo.H(zz).value * cosmo.comoving_distance(zz).value,
+                     # "Hr" : cosmo.H(zz).value * cosmo.comoving_distance(zz).value,
                      "n_x1c_star": len(redshift_coeffs[0]), # 3 = 3 scale-factor nodes
                      "threeD_unexplained": 0,
                      "mass": mass,#+10 ,
