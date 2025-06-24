@@ -323,22 +323,21 @@ def main():
 
     vel_cov = COV.compute_covariance_sum({'fs8':1,'sigv':0},np.zeros(len(wfd)))
     # COV_mm = np.array(vcoeff.T @ vel_cov @ vcoeff)
-
+    # _,s,v=np.linalg.svd(COV_mm)
+    # vt = v.T
     #eigenvactors of pv covariance
 
-    # _,s,vt1=np.linalg.svd(vel_cov)
-    _,s,vt=np.linalg.svd(vel_cov,hermitian=True)
-
-     # _,s,v=np.linalg.svd(COV_mm)
-    # vt = v.T
-
+    u,s,vt=np.linalg.svd(vel_cov,hermitian=True)
     d_mBx1c_dcalib=np.zeros([NSN,3,len(wfd)], dtype=float64)
-
+    dum=np.zeros([NSN,3,len(wfd)], dtype=float64)
     for i in range(len(wfd)):
-        val = vt[i] * np.sqrt(s[i])
-        for j in range(len(val)):
-            d_mBx1c_dcalib[i][0][j] = val[j]
-        
+        d_mBx1c_dcalib[i][:len(wfd)] = u[i]*np.sqrt(s)
+
+    # for i in range(len(wfd)):
+    #     val = vt[i] * np.sqrt(s[i])
+    #     for j in range(len(val)):
+    #         dum[i][0][j] = val[j]
+    
 
     ####### stan_data#########
 
