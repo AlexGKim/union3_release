@@ -329,7 +329,6 @@ def main():
 
     u,s,vt=np.linalg.svd(vel_cov,hermitian=True)
     d_mBx1c_dcalib=np.zeros([NSN,3,len(wfd)], dtype=float64)
-    dum=np.zeros([NSN,3,len(wfd)], dtype=float64)
     for i in range(len(wfd)):
         d_mBx1c_dcalib[i][:len(wfd)] = u[i]*np.sqrt(s)
 
