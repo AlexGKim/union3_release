@@ -295,12 +295,12 @@ model {
 
     calibs_i ~ normal(0, 1);
 
-    MB ~ normal(-19.12, 0.3);       
+    MB ~ normal(-19.12, 0.3);  
 
     //// PRIORS FOR DISPERSIONS
-    fs8_eff ~ cauchy(0,10);
-    sigma_v ~ cauchy(0,10);
-    sigma_int ~ cauchy(0,10);
+    // fs8_eff ~ cauchy(0,10);
+    // sigma_v ~ cauchy(0,10);
+    // sigma_int ~ cauchy(0,10);
 
     //// PRIORS FOR NON-FLAT SN PARAMETER DISTRIBUTIONS
 
