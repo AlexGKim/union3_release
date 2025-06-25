@@ -50,8 +50,8 @@ def main():
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=500
-    itera_warm = 500
+    itera=300
+    itera_warm = 200
     chains=4
     n_jobs = 4
 
@@ -315,11 +315,12 @@ def main():
 
 
 
-    # #from CVV to Cmm
 
+    ####  THIS IS OMEGA DEPENDENT AND NEEDS TO BE CALCULATED IN STAN ####
+
+    # #from CVV to Cmm
     # Hr = cosmo.H(wfd.zobs.values).value * cosmo.comoving_distance(wfd.zobs.values).value
     # vcoeff = np.diag(-5 / (np.log(10) * _C_LIGHT_KMS_) * ((1 + wfd.zobs.values) * _C_LIGHT_KMS_ / Hr - 1))
-
 
     vel_cov = COV.compute_covariance_sum({'fs8':1,'sigv':0},np.zeros(len(wfd)))
     # COV_mm = np.array(vcoeff.T @ vel_cov @ vcoeff)
@@ -327,6 +328,9 @@ def main():
     # vt = v.T
     #eigenvactors of pv covariance
 
+
+    ####  CVV EIGENVECTORS INSTEAD OF Cmm ######
+    ####  CORRECT CALIB TERM U sqrt(L)
     u,s,vt=np.linalg.svd(vel_cov,hermitian=True)
     d_mBx1c_dcalib=np.zeros([NSN,3,len(wfd)], dtype=float64)
     for i in range(len(wfd)):
@@ -347,6 +351,7 @@ def main():
                      "redshift_coeffs": redshift_coeffs,
                      "z_low": wfd.zobs.values,
                      "z_high": ddf.zobs.values,
+                     #### Hr IS OMEGA DEPENDENCE AND NEEDS TO BE CALCULATED IN STAN
                      # "Hr" : cosmo.H(zz).value * cosmo.comoving_distance(zz).value,
                      "n_x1c_star": len(redshift_coeffs[0]), # 3 = 3 scale-factor nodes
                      "threeD_unexplained": 0,
@@ -475,7 +480,7 @@ def main():
              iter_warmup=itera_warm,
              chains=chains,
              parallel_chains=n_jobs,
-             # refresh=20,
+             refresh=20,
              inits=init_fn(),
              max_treedepth=11,
              adapt_delta=0.85, show_progress=True)

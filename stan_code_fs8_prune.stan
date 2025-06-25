@@ -4,8 +4,10 @@
 // Version 1.7 (Jan-26-2024). Fixed parameter limits on selection-effect model outl_mBx1c_uncertainties.
 // Version 1.71 (Sep-13-2024). Added lower limit to mobs_var_by_SN_except_c_R Thanks Aaron Do!
 
+//// MOVE CALCULATIONS TO FUNCTIONS AND INCLUDE CALCULATION OF Hr, which is only implemented for cosmo_model==1
+
 functions{
-   array[] vector calc_model_mu(int n_sne, int cosmo_model, int nzadd, real Om, array[] real redshifts, array[] real redshifts_sort_fill, array[] int unsort_inds, array[] real zhelio, array[] int photoz_inds){
+   array[] vector calc_model_mu_Hr(int n_sne, int cosmo_model, int nzadd, real Om, array[] real redshifts, array[] real redshifts_sort_fill, array[] int unsort_inds, array[] real zhelio, array[] int photoz_inds){
         array[2] vector[n_sne] out;
         vector [n_sne]  model_mu;
         vector [n_sne]  Hr;
@@ -73,7 +75,17 @@ functions{
                     }
                 }
                 model_mu[i] = 5.*log10((1. + zhelio[i] + dz_term)*(r_com_sort[unsort_inds[i] + 1] + dz_Hinv_term)) + 43.22987755309658; //43.1586133146; h0=0.6774
-                Hr[i] = sqrt(Om*pow(1+redshifts[i],3) + (1-Om)) * r_com_sort[unsort_inds[i] + 1];
+
+                if (cosmo_model == 1) {
+                    Hr[i] = sqrt( Om*pow(1. + redshifts[i], 3) + (1. - Om)) * r_com_sort[unsort_inds[i] + 1];
+                }
+                if (cosmo_model == 3) {
+                    Hr[i] = sqrt( Om*pow(1. + redshifts_sort_fill[i], 3) + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE)) )* r_com_sort[unsort_inds[i] + 1];
+                }
+                if (cosmo_model == 5) {
+                    Hr[i] = sqrt( Om*pow(1. + redshifts_sort_fill[i], 3)
+                        + (1. - Om)*pow(1. + redshifts_sort_fill[i], 3.*(1 + wDE + waDE))*exp(-3.*waDE*redshifts_sort_fill[i]/(1. + redshifts_sort_fill[i])) )* r_com_sort[unsort_inds[i] + 1];
+                }
             }
         }
         if (cosmo_model == 2) { // binned mu
@@ -238,12 +250,14 @@ model {
     array[3] vector [n_sne] sig_v;
     vector [n_sne] inl_loglike_by_SN;
 
-    model_mu_Hr = calc_model_mu(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
+    model_mu_Hr = calc_model_mu_Hr(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
 
     model_mBx1c_cov = obs_mBx1c_cov;
 
     // sigmaV part
     for (i in 1:n_sne) {
+        //// NOTE THAT REALLY SHOULD BE DONE BY SAMPLE RATHER THAN REDSHIFT
+        //// IT HAPPENS THAT THIS CONDITION BASED ON OBSERVED REDSHIFT DOES DISTINGUISH THE 2 SAMPLES BEING CONSIDERED
         if (redshifts[i] < 0.1) {
             sig_v[1][i]= (5/log(10.)) * (sigma_v / 299792.458) *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 );
         }
@@ -270,6 +284,7 @@ model {
         model_mBx1c[i][2] = true_x1[i];
         model_mBx1c[i][3] = true_cB[i]; //+ true_cR[i];
 
+        //// v TO m TRANSFORMATION DONE HERE
         inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] |
             model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) , model_mBx1c_cov[i]);
     //                           sqrt(L) ev_i  * fs8_n z * dm/dv  
@@ -282,18 +297,13 @@ model {
 
     MB ~ normal(-19.12, 0.3);       
 
+    //// PRIORS FOR DISPERSIONS
     fs8_eff ~ cauchy(0,10);
     sigma_v ~ cauchy(0,10);
     sigma_int ~ cauchy(0,10);
 
+    //// PRIORS FOR NON-FLAT SN PARAMETER DISTRIBUTIONS
 
-    target += log_sum_exp(log(a_-a_*deltaz_ + deltaz_) + normal_lpdf(true_x1 | 0.37, 0.61), log(1-deltaz_) + log(1-a_) + normal_lpdf(true_x1 | -1.22, 0.56));
-    for (i in 1:n_sne) {
-        if (true_cB[i] >= -0.055){
-            target += normal_lpdf(true_cB[i] | -0.055, 0.15);
-        } else {
-            target += normal_lpdf(true_cB[i] | -0.055, 0.023);
-        }
-    }
+    // target += log_sum_exp(log(a_-a_*deltaz_ + deltaz_) + normal_lpdf(true_x1 | 0.37, 0.61), log(1-deltaz_) + log(1-a_) + normal_lpdf(true_x1 | -1.22, 0.56));
 
 }
