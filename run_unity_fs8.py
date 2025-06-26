@@ -42,16 +42,16 @@ def setup_multiprocessing_for_m1_m2():
 
 
 def main():
-    optimal_processes = setup_multiprocessing_for_m1_m2()
-    # optimal_processes = 1
+    # optimal_processes = setup_multiprocessing_for_m1_m2()
+    optimal_processes = 4
 
     #######INPUT#########
     cosmo_model=1               
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=300
-    itera_warm = 200
+    itera=500
+    itera_warm = 500
     chains=4
     n_jobs = 4
 
