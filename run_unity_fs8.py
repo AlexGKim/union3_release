@@ -50,8 +50,8 @@ def main():
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=500
-    itera_warm = 500
+    itera=1000
+    itera_warm = 1000
     chains=4
     n_jobs = 4
 
