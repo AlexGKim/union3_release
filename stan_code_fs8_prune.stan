@@ -305,6 +305,6 @@ model {
     //// PRIORS FOR NON-FLAT SN PARAMETER DISTRIBUTIONS
 
     target += log_sum_exp(log(a_-a_*deltaz_ + deltaz_) + normal_lpdf(true_x1 | 0.37, 0.61), log(1-deltaz_) + log(1-a_) + normal_lpdf(true_x1 | -1.22, 0.56));
-    // target += skew_normal_lpdf(true_cB, -0.055, );
+    target += skew_normal_lpdf(true_cB, 0.16868315, 0.15550284, 5.19904301);
 
 }
