@@ -50,8 +50,8 @@ def main():
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=1000
-    itera_warm = 1000
+    itera=500
+    itera_warm = 500
     chains=4
     n_jobs = 4
 
@@ -251,7 +251,6 @@ def main():
 
     wfd = df[same_pos_mask]
 
-
     #prepare the data for stan
     NSN =len(np.append(wfd.zobs.values,ddf.zobs.values))
     sample_list=np.append(np.asarray([1 for i in range(len(wfd))]),np.asarray([2 for i in range(len(ddf))]))
@@ -304,7 +303,7 @@ def main():
     #flip covariance###
     kh, ptt,fiducial = init_PS(1e-5, kmax,cosmo_dic)
     fs8_fid = fiducial["fsigma_8"]
-
+    print(fiducial)
 
     pw_dic = {'vv': [[kh, ptt * flip.utils.Du(kh, sigma_u)**2]]}
     rcom = cosmo.comoving_distance(wfd.zobs.values).value * cosmo.h
@@ -334,7 +333,7 @@ def main():
     u,s,vt=np.linalg.svd(vel_cov,hermitian=True)
     d_mBx1c_dcalib=np.zeros([NSN,3,len(wfd)], dtype=float64)
     for i in range(len(wfd)):
-        d_mBx1c_dcalib[i][:len(wfd)] = u[i]*np.sqrt(s)
+        d_mBx1c_dcalib[i,0,:len(wfd)] = u[i]*np.sqrt(s)
 
     # for i in range(len(wfd)):
     #     val = vt[i] * np.sqrt(s[i])
@@ -486,9 +485,9 @@ def main():
              adapt_delta=0.85, show_progress=True)
 
     df = fit.draws_pd()
-    df.to_pickle("/Users/akim/Projects/union3_release/output/result.pkl")
+    df.to_pickle("/home/akim/Projects/union3_release/output/result.pkl")
 
-    fit.save_csvfiles(dir="/Users/akim/Projects/union3_release/output")
+    fit.save_csvfiles(dir="/home/akim/Projects/union3_release/output")
 
     # #save results 
     # fit_params = fit.extract(permuted = True)
