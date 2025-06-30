@@ -23,6 +23,8 @@ _C_LIGHT_KMS_ = acst.c.to('km/s').value
 import astropy.cosmology as acosmo
 import pandas as pd
 
+home_dir=os.environ['HOME']
+
 def setup_multiprocessing_for_m1_m2():
     """Recommended setup for Mac M1/M2"""
     
@@ -41,7 +43,7 @@ def setup_multiprocessing_for_m1_m2():
     return optimal_processes
 
 
-def main():
+def main(outpath):
     # optimal_processes = setup_multiprocessing_for_m1_m2()
     optimal_processes = 4
 
@@ -50,14 +52,14 @@ def main():
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=500
-    itera_warm = 500
+    itera=1000
+    itera_warm = 1000
     chains=4
     n_jobs = 4
 
     #txt file to save results and pickle file to save the chains
-    # sys.stdout = open('res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.txt', 'w')
-    fit_file='res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.pickle'
+    sys.stdout = open(os.path.join(outpath,'res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.txt'), 'w+')
+    fit_file=os.path.join(outpath,'res_fs8_snsim_lowz_svd_sqrt_vt_fitsigv_new_cov_errorpar.pickle')
 
     #input cosmology for PV covariance
     cosmo_dic = {"h":0.6774, "omega_b":0.02230, "omega_cdm":0.1188,"sigma8":0.8159, "n_s":0.9667}#, 'mnu':0.0}
@@ -485,9 +487,10 @@ def main():
              adapt_delta=0.85, show_progress=True)
 
     df = fit.draws_pd()
-    df.to_pickle("/home/akim/Projects/union3_release/output/result.pkl")
+    df.to_pickle(os.path.join(outpath,"result.pkl"))
 
-    fit.save_csvfiles(dir="/home/akim/Projects/union3_release/output")
+    fit.save_csvfiles(dir=outpath)
+                     
 
     # #save results 
     # fit_params = fit.extract(permuted = True)
@@ -539,4 +542,7 @@ def main():
     print(end - start)
 
 if __name__ == "__main__":
-    main()
+    outdir='mock0'
+    outpath = os.path.join(os.getcwd(),outdir)
+    os.makedirs(outpath, exist_ok=True)
+    main(outpath)
