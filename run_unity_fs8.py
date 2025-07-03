@@ -43,7 +43,7 @@ def setup_multiprocessing_for_m1_m2():
     return optimal_processes
 
 
-def main(outpath):
+def main(index, outpath):
     # optimal_processes = setup_multiprocessing_for_m1_m2()
     optimal_processes = 4
 
@@ -52,8 +52,8 @@ def main(outpath):
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=1000
-    itera_warm = 1000
+    itera=500
+    itera_warm = 500
     chains=4
     n_jobs = 4
 
@@ -239,8 +239,8 @@ def main(outpath):
 
     ####read data and prepare stan_data#########
 
-    ddf=pd.read_parquet('snsim_highz.parquet')
-    df=pd.read_parquet('snsim_lowz.parquet')
+    ddf=pd.read_parquet('sim/snsim_highz_{}.parquet'.format(index))
+    df=pd.read_parquet('sim/snsim_lowz_{}.parquet'.format(index))
 
 
     #remove SN in the same host for the lowz sample
@@ -542,7 +542,9 @@ def main(outpath):
     print(end - start)
 
 if __name__ == "__main__":
-    outdir='mock0'
-    outpath = os.path.join(os.getcwd(),outdir)
-    os.makedirs(outpath, exist_ok=True)
-    main(outpath)
+    indeces = ("3", "5", "7","1")
+    indeces = ("2", "4","6","0")
+    for index in indeces:
+        outdir='mock_{}'.format(index)
+        outpath = os.path.join(os.getcwd(),outdir)
+        main(index, outpath)
