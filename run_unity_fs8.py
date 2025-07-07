@@ -160,7 +160,8 @@ def main(index, outpath):
 
 
     def get_redshifts(redshifts):
-        appended_redshifts = arange(0., 2.51, 0.1)
+        # appended_redshifts = arange(0., 2.51, 0.1)
+        appended_redshifts = concatenate((arange(0., 0.1001, 0.01), arange(0.1, 0.30001, 0.02), arange(0.3, 2.51, 0.1)))
         tmp_redshifts = concatenate((redshifts, appended_redshifts))
         
         sort_inds = list(argsort(tmp_redshifts))
