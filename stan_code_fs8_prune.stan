@@ -195,7 +195,10 @@ transformed data {
 
     real a_ = 0.51;
     real K_ = 0.87;
-    real deltaz_= 1/ (1/K_  +1);
+    vector[n_sne] deltaz_;
+    for (i in 1:n_sne) {
+       deltaz_[i]= 1/ (1/K_*pow(1+redshifts[i],-2.8)  +1);
+    }
     // vector [n_gauss] exp_approx_norm = [0.24410438, 0.43274856, 0.32314706]';
     // vector [n_gauss] exp_approx_pos = [0.16913558, 0.68695591, 1.9434773]';
     // vector [n_gauss] exp_approx_width = [0.11070724, 0.330062, 0.96505958]';
@@ -220,7 +223,7 @@ parameters {
     real <lower = 0> fs8_eff;
     real <lower=0> sigma_v;
 
-    array[n_samples] real <lower=0.01, upper = 0.3> sigma_int;
+    array[n_samples] real <lower=0, upper = 0.3> sigma_int;
 
     vector [n_sne] true_x1;
     vector [n_sne] true_cB;
