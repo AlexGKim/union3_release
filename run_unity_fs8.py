@@ -52,9 +52,9 @@ def main(index, outpath):
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera=500
-    itera_warm = 500
-    chains=4
+    itera= 400
+    itera_warm = 400
+    chains = 4
     n_jobs = 4
 
     #txt file to save results and pickle file to save the chains
@@ -160,8 +160,8 @@ def main(index, outpath):
 
 
     def get_redshifts(redshifts):
-        # appended_redshifts = arange(0., 2.51, 0.1)
-        appended_redshifts = concatenate((arange(0., 0.1001, 0.01), arange(0.1, 0.30001, 0.02), arange(0.3, 2.51, 0.1)))
+#        appended_redshifts = arange(0., 2.51, 0.1)
+        appended_redshifts = arange(0., 2.51, 0.025)
         tmp_redshifts = concatenate((redshifts, appended_redshifts))
         
         sort_inds = list(argsort(tmp_redshifts))
@@ -269,9 +269,9 @@ def main(index, outpath):
 
     #mb-x1-c data + covariance
 
-    emb = np.random.normal(loc=0.0, scale=1.e-4, size=len(wfd))
-    ec = np.random.normal(loc=0.0, scale=1.e-4, size=len(wfd))
-    ex1 = np.random.normal(loc=0.0, scale=1.e-4, size=len(wfd))
+    emb = np.random.normal(loc=0.0, scale=1.e-2, size=len(wfd))
+    ec = np.random.normal(loc=0.0, scale=1.e-2, size=len(wfd))
+    ex1 = np.random.normal(loc=0.0, scale=1.e-2, size=len(wfd))
 
     obs_mBx1c_wfd=[]
     for i in range(len(wfd)):
@@ -279,9 +279,9 @@ def main(index, outpath):
     obs_mBx1c_ddf=[]
 
 
-    emb1 =np.random.normal(loc=0.0, scale=1.e-4, size=len(ddf))
-    ec1 =np.random.normal(loc=0.0, scale=1.e-4, size=len(ddf))
-    ex11 = np.random.normal(loc=0.0, scale=1.e-4, size=len(ddf)) 
+    emb1 =np.random.normal(loc=0.0, scale=1.e-2, size=len(ddf))
+    ec1 =np.random.normal(loc=0.0, scale=1.e-2, size=len(ddf))
+    ex11 = np.random.normal(loc=0.0, scale=1.e-2, size=len(ddf)) 
 
     for i in range(len(ddf)):
         obs_mBx1c_ddf.append([ddf.mb.values[i]+ emb1[i], ddf.x1.values[i]+ ex11[i], ddf.c.values[i]+ec1[i]])
@@ -296,9 +296,9 @@ def main(index, outpath):
 
 
     for i in range(NSN):
-        mBx1c_cov[i][0][0] = 1.e-8
-        mBx1c_cov[i][1][1] = 1.e-8
-        mBx1c_cov[i][2][2] = 1.e-8
+        mBx1c_cov[i][0][0] = 1.e-4
+        mBx1c_cov[i][1][1] = 1.e-4
+        mBx1c_cov[i][2][2] = 1.e-4
 
 
         
@@ -345,7 +345,6 @@ def main(index, outpath):
     
 
     ####### stan_data#########
-
     stan_data =  {   "n_sne": NSN, 
                      "nzadd": nzadd,
                      "n_samples": 2,
@@ -485,7 +484,7 @@ def main(index, outpath):
              refresh=20,
              inits=init_fn(),
              max_treedepth=11,
-             adapt_delta=0.85, show_progress=True)
+             adapt_delta=0.85, show_progress=True, show_console=False)
 
     df = fit.draws_pd()
     df.to_pickle(os.path.join(outpath,"result.pkl"))
@@ -545,6 +544,7 @@ def main(index, outpath):
 if __name__ == "__main__":
     indeces = ("3", "5", "7","1")
     indeces = ("2", "4","6","0")
+    indeces = ("7")
     for index in indeces:
         outdir='mock_{}'.format(index)
         outpath = os.path.join(os.getcwd(),outdir)
