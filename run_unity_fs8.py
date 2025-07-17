@@ -52,8 +52,8 @@ def main(index, outpath):
     stan_code_file = './stan_code_fs8_prune.stan' #your stan code file
 
     #number of iteration fro each chain and number of chains
-    itera= 400
-    itera_warm = 400
+    itera= 1000
+    itera_warm = 1000
     chains = 4
     n_jobs = 4
 
@@ -271,7 +271,7 @@ def main(index, outpath):
 
     emb = np.random.normal(loc=0.0, scale=1.e-2, size=len(wfd))
     ec = np.random.normal(loc=0.0, scale=1.e-2, size=len(wfd))
-    ex1 = np.random.normal(loc=0.0, scale=1.e-2, size=len(wfd))
+    ex1 = np.random.normal(loc=0.0, scale=1.e-1, size=len(wfd))
 
     obs_mBx1c_wfd=[]
     for i in range(len(wfd)):
@@ -281,7 +281,7 @@ def main(index, outpath):
 
     emb1 =np.random.normal(loc=0.0, scale=1.e-2, size=len(ddf))
     ec1 =np.random.normal(loc=0.0, scale=1.e-2, size=len(ddf))
-    ex11 = np.random.normal(loc=0.0, scale=1.e-2, size=len(ddf)) 
+    ex11 = np.random.normal(loc=0.0, scale=1.e-1, size=len(ddf)) 
 
     for i in range(len(ddf)):
         obs_mBx1c_ddf.append([ddf.mb.values[i]+ emb1[i], ddf.x1.values[i]+ ex11[i], ddf.c.values[i]+ec1[i]])
@@ -297,7 +297,7 @@ def main(index, outpath):
 
     for i in range(NSN):
         mBx1c_cov[i][0][0] = 1.e-4
-        mBx1c_cov[i][1][1] = 1.e-4
+        mBx1c_cov[i][1][1] = 1.e-2
         mBx1c_cov[i][2][2] = 1.e-4
 
 
@@ -532,6 +532,7 @@ def main(index, outpath):
 
     try:
         print(fit.summary())
+        print(fit.diagnose())
     except:
         print("Couldn't print fit! Something is very wrong!")
 
@@ -544,7 +545,7 @@ def main(index, outpath):
 if __name__ == "__main__":
     indeces = ("3", "5", "7","1")
     indeces = ("2", "4","6","0")
-    indeces = ("7")
+    indeces = ("8")
     for index in indeces:
         outdir='mock_{}'.format(index)
         outpath = os.path.join(os.getcwd(),outdir)
