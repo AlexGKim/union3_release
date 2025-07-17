@@ -289,7 +289,8 @@ model {
 
         //// v TO m TRANSFORMATION DONE HERE
         inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] |
-            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) , model_mBx1c_cov[i]);
+            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
+            , model_mBx1c_cov[i]);
     //                           sqrt(L) ev_i  * fs8_n z * dm/dv  
  
     }
@@ -306,8 +307,11 @@ model {
     // sigma_int ~ cauchy(0,10);
 
     //// PRIORS FOR NON-FLAT SN PARAMETER DISTRIBUTIONS
+    for (i in 1:n_sne) {
+        target += log_sum_exp(log(a_-a_*deltaz_[i] + deltaz_[i]) + normal_lpdf(true_x1[i] | 0.37, 0.61), 
+            log(1-deltaz_[i]) + log(1-a_) + normal_lpdf(true_x1[i] | -1.22, 0.56));        
+    }
 
-    target += log_sum_exp(log(a_-a_*deltaz_ + deltaz_) + normal_lpdf(true_x1 | 0.37, 0.61), log(1-deltaz_) + log(1-a_) + normal_lpdf(true_x1 | -1.22, 0.56));
     target += skew_normal_lpdf(true_cB|  -0.0795961, 0.15509453, 5.16340666);
 
 }
