@@ -240,8 +240,9 @@ def main(index, outpath):
 
     ####read data and prepare stan_data#########
 
-    ddf=pd.read_parquet('sim/snsim_highz_{}.parquet'.format(index))
-    df=pd.read_parquet('sim/snsim_lowz_{}.parquet'.format(index))
+    ddf=pd.read_parquet('new_sim/snsim_highz_20000.parquet')
+    ddf=ddf.sample(n=1000, random_state=24+int(index))
+    df=pd.read_parquet('new_sim/snsim_lowz_{}_sigmaint01.parquet'.format(index))
 
 
     #remove SN in the same host for the lowz sample
@@ -544,8 +545,7 @@ def main(index, outpath):
 
 if __name__ == "__main__":
     indeces = ("3", "5", "7","1")
-    indeces = ("2", "4","6","0")
-    indeces = ("8")
+    # indeces = ("2", "4","6","0")
     for index in indeces:
         outdir='mock_{}'.format(index)
         outpath = os.path.join(os.getcwd(),outdir)
