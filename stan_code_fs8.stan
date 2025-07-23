@@ -522,14 +522,14 @@ model {
             tmploglike_x1[g_ind] = log(exp_approx_norm[g_ind]) + normal_lpdf(true_x1[i] | exp_approx_pos[g_ind]*tau_x1_by_SN[i] + x1_star_by_SN[i], sqrt((exp_approx_width[g_ind]*tau_x1_by_SN[i])^2 + R_x1_by_SN[i]^2));
         }
 
-
-    outl_loglike_by_SN[i] = log(outl_frac) +
-                        multi_normal_lpdf(obs_mBx1c[i] |
-            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
-            + dz_deriv_term, model_mBx1c[i], model_mBx1c_cov_outl[i]
-                      + normal_lpdf(true_x1[i]| 0, outl_mBx1c_uncertainties_x1)
-                      + normal_lpdf(true_cB[i]| 0, outl_mBx1c_uncertainties_cB));
-                      //+ normal_log(true_cR_unit[i], 0, outl_mBx1c_uncertainties_cR_unit);
+        //TURN THIS OFF FOR NOW AGK
+    // outl_loglike_by_SN[i] = log(outl_frac) +
+    //                     multi_normal_lpdf(obs_mBx1c[i] |
+    //         model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
+    //         + dz_deriv_term, model_mBx1c[i], model_mBx1c_cov_outl[i]
+    //                   + normal_lpdf(true_x1[i]| 0, outl_mBx1c_uncertainties_x1)
+    //                   + normal_lpdf(true_cB[i]| 0, outl_mBx1c_uncertainties_cB));
+    //                   //+ normal_log(true_cR_unit[i], 0, outl_mBx1c_uncertainties_cR_unit);
 
         this_norm_LL = 0.0001;
     for (g_indx in 1:n_gauss) {
@@ -558,9 +558,12 @@ model {
 	}
   
 
-    for (i in 1:n_sne) {
-        target += log_sum_exp(outl_loglike_by_SN[i], inl_loglike_by_SN[i]);
-    }
+    // for (i in 1:n_sne) {
+    //     target += log_sum_exp(outl_loglike_by_SN[i], inl_loglike_by_SN[i]);
+    // }
+
+    target += inl_loglike_by_SN;
+    
 
     for (i in 1:n_photoz) {
         target += log_sum_exp(log(spike_redshift_prob[i]) + normal_log(dz[i], 0., 0.01),
