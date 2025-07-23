@@ -157,8 +157,8 @@ data {
     vector [n_sne] p_high_mass;
 
     int nzadd;
-    array[2*(n_sne + nzadd) - 1]real redshifts_sort_fill ;
-    int unsort_inds[n_sne + nzadd];
+    array[2*(n_sne + nzadd) - 1] real redshifts_sort_fill ;
+    array[n_sne + nzadd] int unsort_inds;
 
     int do_twoalphabeta;
     int do_host_mass;
@@ -191,7 +191,7 @@ transformed data {
     vector[n_sne] deltaz_;
     for (i in 1:n_sne) {
        deltaz_[i]= 1/ (1/K_*pow(1+redshifts[i],-2.8)  +1);
-
+    }
     real outl_frac=0;
     print ("Version 1.71");
 
@@ -416,7 +416,7 @@ model {
 
     // calibs = calibs_i * fs8_eff; 
 
-    #sigmaV part
+    // sigmaV part
     for (i in 1:n_sne) {
         if (redshifts[i] < 0.1) {
             sig_v[1][i]= (5/log(10.)) * (sigma_v / 299792.458) *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 );
