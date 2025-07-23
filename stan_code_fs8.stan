@@ -129,9 +129,9 @@ data {
     int<lower=0> n_photoz; // number of SNe with photo-z's
     int n_x1c_star;    
 
-    int <lower=1, upper = n_samples> sample_list[n_sne];
-    real <lower=0> redshifts[n_sne];
-    real <lower=0> zhelio[n_sne];
+    array[n_sne]int <lower=1, upper = n_samples> sample_list;
+    array[n_sne]real <lower=0> redshifts;
+    array[n_sne]real <lower=0> zhelio;
     matrix [n_sne, n_x1c_star] redshift_coeffs;
     
 
@@ -149,15 +149,15 @@ data {
     // vector [n_sne] Hr;
 
 
-    vector[3] obs_mBx1c [n_sne];
-    matrix[3,3] obs_mBx1c_cov [n_sne];
-    matrix[3, n_calib] d_mBx1c_d_calib [n_sne];
+    array[n_sne] vector[3] obs_mBx1c;
+    array[n_sne] matrix[3,3] obs_mBx1c_cov;
+    array[n_sne] matrix[3, n_calib] d_mBx1c_d_calib;
     vector [n_sne] mass;
     vector [n_sne] mass_err;
     vector [n_sne] p_high_mass;
 
     int nzadd;
-    real redshifts_sort_fill [2*(n_sne + nzadd) - 1];
+    array[2*(n_sne + nzadd) - 1]real redshifts_sort_fill ;
     int unsort_inds[n_sne + nzadd];
 
     int do_twoalphabeta;
@@ -171,12 +171,12 @@ data {
     vector [n_samples] est_mobs_cuts;
     vector [n_samples] est_mobs_sigmas;
 
-    vector [3] d_mBx1c_dz_list [n_photoz];
+    array[n_photoz]vector [3] d_mBx1c_dz_list;
     vector [n_photoz] photo_z0;
     vector [n_photoz] photo_dz;
     vector [n_photoz] spike_redshift_prob; // E.g., 0.8
     vector [n_photoz] photo_spikez;
-    int <lower = 0, upper = n_sne> photoz_inds [n_sne]; // index of photo-z parameter (indexed from one) if photo-z, else 0
+    array[n_sne] int <lower = 0, upper = n_sne> photoz_inds; // index of photo-z parameter (indexed from one) if photo-z, else 0
 
 }
 
@@ -217,7 +217,7 @@ parameters {
     
     vector [n_zbins] mu_zbins;
 
-    real <lower=0.01, upper = 0.3> sigma_int[n_samples];
+    array[n_samples] real <lower=0, upper = 0.3> sigma_int;
     simplex [3] mBx1c_int_variance;
 
     vector [n_sne] true_x1;
@@ -238,8 +238,8 @@ parameters {
 
     
 
-    real <lower = 100, upper = 200> mobs_cuts[n_samples];
-    real <lower = 0.1, upper = 3> mobs_cut_sigmas[n_samples];
+    array[n_samples] real <lower = 100, upper = 200> mobs_cuts;
+    array[n_samples] real <lower = 0.1, upper = 3> mobs_cut_sigmas;
 
     vector [n_photoz] dz;
 
@@ -250,18 +250,18 @@ parameters {
 }
 
 transformed parameters {
-    vector [3] model_mBx1c [n_sne];
-    matrix [3,3] model_mBx1c_cov [n_sne];
-    matrix [3,3] model_mBx1c_cov_outl [n_sne];
+    array[2] vector[n_sne] model_mu_Hr; 
+    array[n_sne] vector [3] model_mBx1c;
+    array[n_sne] matrix [3,3] model_mBx1c_cov;
 
-    vector [3] sig_int_vector [n_samples];
+    array[n_samples] vector [3] sig_int_vector;
     // real <lower = -0.1, upper = 0.1> outl_frac;
 
     real alpha;
     real beta_B;
     real beta_R_high;
     real beta_R_low;
-    vector [n_sne] sig_v[3];
+    array[3] vector [n_sne] sig_v;
 
     real alpha_eff;
     real beta_eff;
@@ -615,7 +615,7 @@ model {
     //sigma_int[1] ~ normal(0.02, 0.0001);
 
     //outl_frac ~ lognormal(outl_frac_prior_lnmean, outl_frac_prior_lnwidth);
-    
+
     for (i in 1:n_sne) {
         target += log_mix(a_-a_*deltaz_[i] + deltaz_[i],  normal_lpdf(true_x1[i] | 0.37, 0.61), normal_lpdf(true_x1[i] | -1.22, 0.56));        
     }
