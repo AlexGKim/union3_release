@@ -290,7 +290,6 @@ transformed parameters {
     vector [n_sne] R_c_by_SN;
     vector [n_sne] tau_c_by_SN;
     vector [n_calib] calibs_fs8;
-    vector [n_calib] calibs;
 
 
     vector [n_sne] mobs_by_SN_except_c_R;
@@ -301,7 +300,7 @@ transformed parameters {
     vector [n_sne]  model_mu;
 
     // vector [n_sne] outl_loglike_by_SN;
-    vector [n_sne] inl_loglike_by_SN;
+    // vector [n_sne] inl_loglike_by_SN;
     //vector [n_sne] PointPosteriors;
 
     real this_MB;
@@ -338,6 +337,7 @@ model {
     array[n_samples] vector [3] sig_int_vector;
     array[3] vector [n_sne] sig_v;
     vector [n_sne] inl_loglike_by_SN;
+    vector [n_sne] outl_loglike_by_SN;
 
     model_mu_Hr = calc_model_mu_Hr(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
 
