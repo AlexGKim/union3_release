@@ -250,37 +250,28 @@ parameters {
 }
 
 transformed parameters {
-    array[2] vector[n_sne] model_mu_Hr; 
-    array[n_sne] vector [3] model_mBx1c;
-    array[n_sne] matrix [3,3] model_mBx1c_cov;
+    // array[2] vector[n_sne] model_mu_Hr; 
+    // array[n_sne] vector [3] model_mBx1c;
+    // array[n_sne] matrix [3,3] model_mBx1c_cov;
 
-    array[n_samples] vector [3] sig_int_vector;
+    // array[n_samples] vector [3] sig_int_vector;
     // real <lower = -0.1, upper = 0.1> outl_frac;
 
     real alpha;
     real beta_B;
     real beta_R_high;
     real beta_R_low;
-    array[3] vector [n_sne] sig_v;
+    //array[3] vector [n_sne] sig_v;
 
-    real alpha_eff;
-    real beta_eff;
-    real p_high_mass_eff;
+    // real alpha_eff;
+    // real beta_eff;
+    // real p_high_mass_eff;
 
 
-    vector [n_sne] x1_star_by_SN;
-    vector [n_sne] R_x1_by_SN;
-    vector [n_sne] tau_x1_by_SN;
-
-    vector [n_sne] c_star_by_SN;
-    vector [n_sne] R_c_by_SN;
-    vector [n_sne] tau_c_by_SN;
     vector [n_calib] calibs_fs8;
     vector [n_calib] calibs;
 
 
-    vector [n_sne] mobs_by_SN_except_c_R;
-    vector <lower = 0.0001> [n_sne] mobs_var_by_SN_except_c_R; // Thanks Aaron Do!
 
     // real Hinv_sort_fill [2*(n_sne + nzadd) - 1];
     // real r_com_sort[n_sne + nzadd];
@@ -289,14 +280,8 @@ transformed parameters {
     // vector [n_sne] outl_loglike_by_SN;
     // vector [n_sne] inl_loglike_by_SN;
 
-    real this_MB;
-    real this_norm_LL;
 
-    // vector [3] dz_deriv_term;
-    // real dz_term;
-    // real dz_Hinv_term;
 
-    vector [n_gauss] tmploglike_x1;
 
     // vector [n_zbins] r_comove_bins;
 
@@ -403,12 +388,33 @@ model {
     array[2] vector[n_sne] model_mu_Hr; 
     array[n_sne] vector [3] model_mBx1c;
     array[n_sne] matrix [3,3] model_mBx1c_cov;
+    array[n_sne] matrix [3,3] model_mBx1c_cov_outl;
 
     array[n_samples] vector [3] sig_int_vector;
     array[3] vector [n_sne] sig_v;
     vector [n_sne] inl_loglike_by_SN;
     vector [n_sne] outl_loglike_by_SN;
+    real alpha_eff;
+    real beta_eff;
+    real p_high_mass_eff;
+    vector [n_sne] x1_star_by_SN;
+    vector [n_sne] R_x1_by_SN;
+    vector [n_sne] tau_x1_by_SN;
 
+    vector [n_sne] c_star_by_SN;
+    vector [n_sne] R_c_by_SN;
+    vector [n_sne] tau_c_by_SN;
+
+    real this_MB;
+    real this_norm_LL;
+
+    vector [n_sne] mobs_by_SN_except_c_R;
+    vector [n_sne] mobs_var_by_SN_except_c_R; // Thanks Aaron Do!
+    vector [3] dz_deriv_term;
+    real dz_term;
+    real dz_Hinv_term;
+
+    vector [n_gauss] tmploglike_x1;
     model_mu_Hr = calc_model_mu_Hr(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
 
     model_mBx1c_cov = obs_mBx1c_cov;
@@ -512,17 +518,17 @@ model {
 
 
         for (g_ind in 1:n_gauss) { // gauss ind
-            //tmploglike_c[g_ind]   = log(exp_approx_norm[g_ind]) + normal_log(true_cR_unit[i], exp_approx_pos[g_ind], exp_approx_width[g_ind]);
-            tmploglike_x1[g_ind] = log(exp_approx_norm[g_ind]) + normal_log(true_x1[i], exp_approx_pos[g_ind]*tau_x1_by_SN[i] + x1_star_by_SN[i], sqrt((exp_approx_width[g_ind]*tau_x1_by_SN[i])^2 + R_x1_by_SN[i]^2));
+            //tmploglike_c[g_ind]   = log(exp_approx_norm[g_ind]) + normal_lpdf(true_cR_unit[i]| exp_approx_pos[g_ind], exp_approx_width[g_ind]);
+            tmploglike_x1[g_ind] = log(exp_approx_norm[g_ind]) + normal_lpdf(true_x1[i] | exp_approx_pos[g_ind]*tau_x1_by_SN[i] + x1_star_by_SN[i], sqrt((exp_approx_width[g_ind]*tau_x1_by_SN[i])^2 + R_x1_by_SN[i]^2));
         }
 
 
     outl_loglike_by_SN[i] = log(outl_frac) +
-                        multi_normal_log(obs_mBx1c[i] |
+                        multi_normal_lpdf(obs_mBx1c[i] |
             model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
-            + dz_deriv_term, model_mBx1c[i], model_mBx1c_cov_outl[i])
-                      + normal_log(true_x1[i], 0, outl_mBx1c_uncertainties_x1)
-                      + normal_log(true_cB[i], 0, outl_mBx1c_uncertainties_cB);
+            + dz_deriv_term, model_mBx1c[i], model_mBx1c_cov_outl[i]
+                      + normal_lpdf(true_x1[i]| 0, outl_mBx1c_uncertainties_x1)
+                      + normal_lpdf(true_cB[i]| 0, outl_mBx1c_uncertainties_cB));
                       //+ normal_log(true_cR_unit[i], 0, outl_mBx1c_uncertainties_cR_unit);
 
         this_norm_LL = 0.0001;
@@ -549,7 +555,7 @@ model {
                         obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
                         mobs_cut_sigmas[sample_list[i]])
                                           - log(this_norm_LL); //No calibration in this term, see above comment!
-
+	}
   
 
     for (i in 1:n_sne) {
