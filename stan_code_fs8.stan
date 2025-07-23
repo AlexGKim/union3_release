@@ -526,7 +526,7 @@ model {
     // outl_loglike_by_SN[i] = log(outl_frac) +
     //                     multi_normal_lpdf(obs_mBx1c[i] |
     //         model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
-    //         + dz_deriv_term, model_mBx1c[i], model_mBx1c_cov_outl[i]
+    //         + dz_deriv_term,  model_mBx1c_cov_outl[i]
     //                   + normal_lpdf(true_x1[i]| 0, outl_mBx1c_uncertainties_x1)
     //                   + normal_lpdf(true_cB[i]| 0, outl_mBx1c_uncertainties_cB));
     //                   //+ normal_log(true_cR_unit[i], 0, outl_mBx1c_uncertainties_cR_unit);
@@ -534,7 +534,7 @@ model {
         this_norm_LL = 0.0001;
     for (g_indx in 1:n_gauss) {
         for (g_indc in 1:n_gauss) {
-            this_norm_LL += exp_approx_norm[g_indx]*exp_approx_norm[g_indc]*normal_cdf(   mobs_cuts[sample_list[i]], //  + d_mBx1c_d_calib[i][1] * calibs
+            this_norm_LL += exp_approx_norm[g_indx]*exp_approx_norm[g_indc]*normal_cdf(   mobs_cuts[sample_list[i]]| //  + d_mBx1c_d_calib[i][1] * calibs
                                                   mobs_by_SN_except_c_R[i] + ((beta_R_low*(1 - p_high_mass_eff) + beta_R_high*p_high_mass_eff) + mobs_cut1[i])*exp_approx_pos[g_indc]*tau_c_by_SN[i] - alpha*exp_approx_pos[g_indx]*tau_x1_by_SN[i],
                                                
                                                                                               sqrt(mobs_var_by_SN_except_c_R[i]
@@ -544,14 +544,14 @@ model {
     }
 
     
-    inl_loglike_by_SN[i] = log(1 - outl_frac)
-                        + multi_normal_log(obs_mBx1c[i] |
+    inl_loglike_by_SN[i] =  log(1 - outl_frac)
+                        + multi_normal_lpdf(obs_mBx1c[i] |
             model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
-            + dz_deriv_term, model_mBx1c[i], model_mBx1c_cov[i])
-                      + normal_log(true_cB[i], c_star_by_SN[i], R_c_by_SN[i])
+            + dz_deriv_term,  model_mBx1c_cov[i])
+                      + normal_lpdf(true_cB[i]| c_star_by_SN[i], R_c_by_SN[i])
                        + log_sum_exp(tmploglike_x1) // + log_sum_exp(tmploglike_c)
 
-                                      + normal_cdf_log(mobs_cuts[sample_list[i]], //  + d_mBx1c_d_calib[i][1] * calibs
+                                      + normal_lcdf(mobs_cuts[sample_list[i]]| //  + d_mBx1c_d_calib[i][1] * calibs
                         obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
                         mobs_cut_sigmas[sample_list[i]])
                                           - log(this_norm_LL); //No calibration in this term, see above comment!
@@ -564,8 +564,8 @@ model {
 
     target += inl_loglike_by_SN;
     for (i in 1:n_photoz) {
-        target += log_sum_exp(log(spike_redshift_prob[i]) + normal_log(dz[i], 0., 0.01),
-                              log(1. - spike_redshift_prob[i]) + normal_log(dz[i], photo_z0[i] - photo_spikez[i], photo_dz[i]));
+        target += log_sum_exp(log(spike_redshift_prob[i]) + normal_lpdf(dz[i]| 0., 0.01),
+                              log(1. - spike_redshift_prob[i]) + normal_lpdf(dz[i]| photo_z0[i] - photo_spikez[i], photo_dz[i]));
     }
 
     calibs_i ~ normal(0, 1);
