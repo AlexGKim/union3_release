@@ -563,8 +563,6 @@ model {
     // }
 
     target += inl_loglike_by_SN;
-    
-
     for (i in 1:n_photoz) {
         target += log_sum_exp(log(spike_redshift_prob[i]) + normal_log(dz[i], 0., 0.01),
                               log(1. - spike_redshift_prob[i]) + normal_log(dz[i], photo_z0[i] - photo_spikez[i], photo_dz[i]));
