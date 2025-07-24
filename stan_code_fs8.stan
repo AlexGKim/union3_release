@@ -268,7 +268,7 @@ transformed parameters {
     // real p_high_mass_eff;
 
 
-    vector [n_calib] calibs_fs8;
+    // vector [n_calib] calibs_fs8;
     vector [n_calib] calibs;
 
 
@@ -410,7 +410,7 @@ model {
 
     vector [n_sne] mobs_by_SN_except_c_R;
     vector [n_sne] mobs_var_by_SN_except_c_R; // Thanks Aaron Do!
-    vector [3] dz_deriv_term;
+    // vector [3] dz_deriv_term;
     real dz_term;
     real dz_Hinv_term;
 
@@ -433,19 +433,6 @@ model {
         sig_v[2][i]= 0 ;
         sig_v[3][i]= 0 ;}
 
-    // outl_frac = 0;
-
-    // alpha = tan(alpha_angle);
-    
-    // if (do_twoalphabeta == 0) {
-    //     beta_B = tan(beta_angle_red_low);
-    //     beta_R_low = tan(beta_angle_red_low);
-    //     beta_R_high = tan(beta_angle_red_low);
-    // } else {
-    //     beta_B = tan(beta_angle_blue);
-    //     beta_R_low = tan(beta_angle_red_low);
-    //     beta_R_high = tan(beta_angle_red_high);
-    // }
 
     for (i in 1:n_samples) {
         if (threeD_unexplained == 1) {
@@ -485,7 +472,7 @@ model {
         R_c_by_SN[i] = dot_product(R_c, redshift_coeffs[i]);
         tau_c_by_SN[i] = dot_product(tau_c, redshift_coeffs[i]);
 
-        //true_cR[i] = true_cR_unit[i]*tau_c_by_SN[i];
+        true_cR[i] = true_cR_unit[i]*tau_c_by_SN[i];
 
 
         if (MB_by_sample == 1) {
@@ -496,25 +483,25 @@ model {
 
 
         mobs_by_SN_except_c_R[i] = this_MB + model_mu_Hr[1][i] + mobs_cut0[i] - alpha*x1_star_by_SN[i] + (beta_B + mobs_cut1[i])*c_star_by_SN[i] - delta_0*p_high_mass_eff;
+        // MAYBE THIS NEEDS A MINIMUM
         mobs_var_by_SN_except_c_R[i] = mobs_cut_sigmas[sample_list[i]]^2
                                       + model_mBx1c_cov[i][1,1] + (mobs_cut1[i]*model_mBx1c_cov[i][3,3])^2 + 2.*mobs_cut1[i]*model_mBx1c_cov[i][1,3]
                                       + (alpha*R_x1_by_SN[i])^2 + ((beta_B + mobs_cut1[i])*R_c_by_SN[i])^2;
 
-
-        model_mBx1c[i][1] = this_MB + model_mu_Hr[1][i] - alpha*true_x1[i] + beta_B*true_cB[i]; //+(beta_R_low*(1 - p_high_mass_eff); 
-                            //+ beta_R_high*p_high_mass_eff)*true_cR[i] - delta_0*p_high_mass_eff;
+        model_mBx1c[i][1] = this_MB + model_mu_Hr[1][i] - alpha*true_x1[i] + beta_B*true_cB[i] + (beta_R_low*(1 - p_high_mass_eff) + 
+                            beta_R_high*p_high_mass_eff)*true_cR[i] - delta_0*p_high_mass_eff;
         model_mBx1c[i][2] = true_x1[i];
         model_mBx1c[i][3] = true_cB[i]; //+ true_cR[i];
 
-    model_mBx1c[i] = model_mBx1c[i]; //  + d_mBx1c_d_calib[i] * calibs;
+        // model_mBx1c[i] = model_mBx1c[i]; //  + d_mBx1c_d_calib[i] * calibs;
 
-        if (photoz_inds[i] == 0) {
-            dz_deriv_term[1] = 0.;
-            dz_deriv_term[2] = 0.;
-            dz_deriv_term[3] = 0.;
-        } else {
-            dz_deriv_term = dz[photoz_inds[i]]*d_mBx1c_dz_list[photoz_inds[i]];
-        }
+        // if (photoz_inds[i] == 0) {
+        //     dz_deriv_term[1] = 0.;
+        //     dz_deriv_term[2] = 0.;
+        //     dz_deriv_term[3] = 0.;
+        // } else {
+        //     dz_deriv_term = dz[photoz_inds[i]]*d_mBx1c_dz_list[photoz_inds[i]];
+        // }
 
 
         for (g_ind in 1:n_gauss) { // gauss ind
@@ -543,18 +530,30 @@ model {
         }
     }
 
-    
-    inl_loglike_by_SN[i] =  log(1 - outl_frac)
-                        + multi_normal_lpdf(obs_mBx1c[i] |
-            model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
-            + dz_deriv_term,  model_mBx1c_cov[i])
-                      + normal_lpdf(true_cB[i]| c_star_by_SN[i], R_c_by_SN[i])
-                       + log_sum_exp(tmploglike_x1) // + log_sum_exp(tmploglike_c)
+    inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 )|
+                        model_mBx1c[i], 
+                        model_mBx1c_cov[i])
+                       + normal_log(true_cB[i], c_star_by_SN[i], R_c_by_SN[i])
+                       + log_sum_exp(tmploglike_x1)  + log_sum_exp(tmploglike_c)
 
-                                      + normal_lcdf(mobs_cuts[sample_list[i]]| //  + d_mBx1c_d_calib[i][1] * calibs
-                        obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
+                        + normal_cdf_log(mobs_cuts[sample_list[i]], 
+                         obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 )
+                        + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
                         mobs_cut_sigmas[sample_list[i]])
-                                          - log(this_norm_LL); //No calibration in this term, see above comment!
+                            - log(this_norm_LL); //No calibration in this term, see above comment!
+
+    
+    // inl_loglike_by_SN[i] =  log(1 - outl_frac)
+    //                     + multi_normal_lpdf(obs_mBx1c[i] |
+    //         model_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 ) 
+    //         + dz_deriv_term,  model_mBx1c_cov[i])
+    //                   + normal_lpdf(true_cB[i]| c_star_by_SN[i], R_c_by_SN[i])
+    //                    + log_sum_exp(tmploglike_x1) // + log_sum_exp(tmploglike_c)
+
+    //                                   + normal_lcdf(mobs_cuts[sample_list[i]]| //  + d_mBx1c_d_calib[i][1] * calibs
+    //                     obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
+    //                     mobs_cut_sigmas[sample_list[i]])
+    //                                       - log(this_norm_LL); //No calibration in this term, see above comment!
 	}
   
 
@@ -623,10 +622,10 @@ model {
 
     //outl_frac ~ lognormal(outl_frac_prior_lnmean, outl_frac_prior_lnwidth);
 
-    for (i in 1:n_sne) {
-        target += log_mix(a_-a_*deltaz_[i] + deltaz_[i],  normal_lpdf(true_x1[i] | 0.37, 0.61), normal_lpdf(true_x1[i] | -1.22, 0.56));        
-    }
+    // for (i in 1:n_sne) {
+    //     target += log_mix(a_-a_*deltaz_[i] + deltaz_[i],  normal_lpdf(true_x1[i] | 0.37, 0.61), normal_lpdf(true_x1[i] | -1.22, 0.56));        
+    // }
 
-    target += skew_normal_lpdf(true_cB|  -0.0795961, 0.15509453, 5.16340666);
+    // target += skew_normal_lpdf(true_cB|  -0.0795961, 0.15509453, 5.16340666);
     
-    }
+    // }
