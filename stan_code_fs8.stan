@@ -222,6 +222,7 @@ parameters {
 
     vector [n_sne] true_x1;
     vector [n_sne] true_cB;
+    vector <lower = -0.25> [n_sne] true_cR_unit;
 
     // Population parameters:
   
@@ -261,12 +262,12 @@ transformed parameters {
     real beta_B;
     real beta_R_high;
     real beta_R_low;
+    
     //array[3] vector [n_sne] sig_v;
 
     // real alpha_eff;
     // real beta_eff;
     // real p_high_mass_eff;
-
 
     // vector [n_calib] calibs_fs8;
     vector [n_calib] calibs;
@@ -414,7 +415,11 @@ model {
     real dz_term;
     real dz_Hinv_term;
 
+    vector [n_sne] true_cR;
+
     vector [n_gauss] tmploglike_x1;
+    vector [n_gauss] tmploglike_c;
+   
     model_mu_Hr = calc_model_mu_Hr(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
 
     model_mBx1c_cov = obs_mBx1c_cov;
@@ -533,10 +538,10 @@ model {
     inl_loglike_by_SN[i] = multi_normal_lpdf(obs_mBx1c[i] + d_mBx1c_d_calib[i] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 )|
                         model_mBx1c[i], 
                         model_mBx1c_cov[i])
-                       + normal_log(true_cB[i], c_star_by_SN[i], R_c_by_SN[i])
+                       + normal_lpdf(true_cB[i]| c_star_by_SN[i], R_c_by_SN[i])
                        + log_sum_exp(tmploglike_x1)  + log_sum_exp(tmploglike_c)
 
-                        + normal_cdf_log(mobs_cuts[sample_list[i]], 
+                        + normal_lcdf(mobs_cuts[sample_list[i]]| 
                          obs_mBx1c[i][1] + d_mBx1c_d_calib[i][1] * calibs * (5/log(10.)) / 299792.458 *(((1.+redshifts[i]) /model_mu_Hr[2][i]) - 1 )
                         + mobs_cut0[i] + mobs_cut1[i]*(obs_mBx1c[i][3] + d_mBx1c_d_calib[i][3] * calibs),
                         mobs_cut_sigmas[sample_list[i]])
@@ -628,4 +633,5 @@ model {
 
     // target += skew_normal_lpdf(true_cB|  -0.0795961, 0.15509453, 5.16340666);
     
-    // }
+    // 
+}
