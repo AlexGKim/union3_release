@@ -245,9 +245,9 @@ parameters {
     vector [n_photoz] dz;
 
     
-    real <lower = 0.2, upper = 2> outl_mBx1c_uncertainties_mB;
-    real <lower = 1, upper = 10> outl_mBx1c_uncertainties_x1;
-    real <lower = 0.1, upper = 1> outl_mBx1c_uncertainties_cB;
+//    real <lower = 0.2, upper = 2> outl_mBx1c_uncertainties_mB;
+//    real <lower = 1, upper = 10> outl_mBx1c_uncertainties_x1;
+//    real <lower = 0.1, upper = 1> outl_mBx1c_uncertainties_cB;
 }
 
 transformed parameters {
@@ -389,12 +389,12 @@ model {
     array[2] vector[n_sne] model_mu_Hr; 
     array[n_sne] vector [3] model_mBx1c;
     array[n_sne] matrix [3,3] model_mBx1c_cov;
-    array[n_sne] matrix [3,3] model_mBx1c_cov_outl;
+//    array[n_sne] matrix [3,3] model_mBx1c_cov_outl;
 
     array[n_samples] vector [3] sig_int_vector;
     array[3] vector [n_sne] sig_v;
     vector [n_sne] inl_loglike_by_SN;
-    vector [n_sne] outl_loglike_by_SN;
+//    vector [n_sne] outl_loglike_by_SN;
     real alpha_eff;
     real beta_eff;
     real p_high_mass_eff;
@@ -423,7 +423,7 @@ model {
     model_mu_Hr = calc_model_mu_Hr(n_sne, cosmo_model, nzadd, Om, redshifts, redshifts_sort_fill, unsort_inds, zhelio, photoz_inds);
 
     model_mBx1c_cov = obs_mBx1c_cov;
-    model_mBx1c_cov_outl = obs_mBx1c_cov;
+//    model_mBx1c_cov_outl = obs_mBx1c_cov;
 
     // calibs = calibs_i * fs8_eff; 
 
@@ -466,7 +466,7 @@ model {
         for (j in 1:3) {
             model_mBx1c_cov[i][j,j] = model_mBx1c_cov[i][j,j] + sig_int_vector[sample_list[i]][j]^2 + sig_v[j][i]^2;
         }
-        model_mBx1c_cov_outl[i][1,1] = model_mBx1c_cov_outl[i][1,1] + outl_mBx1c_uncertainties_mB^2;
+        // model_mBx1c_cov_outl[i][1,1] = model_mBx1c_cov_outl[i][1,1] + outl_mBx1c_uncertainties_mB^2;
 
 
         x1_star_by_SN[i] = dot_product(x1_star, redshift_coeffs[i]);
@@ -510,7 +510,7 @@ model {
 
 
         for (g_ind in 1:n_gauss) { // gauss ind
-            //tmploglike_c[g_ind]   = log(exp_approx_norm[g_ind]) + normal_lpdf(true_cR_unit[i]| exp_approx_pos[g_ind], exp_approx_width[g_ind]);
+            tmploglike_c[g_ind]   = log(exp_approx_norm[g_ind]) + normal_lpdf(true_cR_unit[i]| exp_approx_pos[g_ind], exp_approx_width[g_ind]);
             tmploglike_x1[g_ind] = log(exp_approx_norm[g_ind]) + normal_lpdf(true_x1[i] | exp_approx_pos[g_ind]*tau_x1_by_SN[i] + x1_star_by_SN[i], sqrt((exp_approx_width[g_ind]*tau_x1_by_SN[i])^2 + R_x1_by_SN[i]^2));
         }
 
@@ -567,10 +567,10 @@ model {
     // }
 
     target += inl_loglike_by_SN;
-    for (i in 1:n_photoz) {
-        target += log_sum_exp(log(spike_redshift_prob[i]) + normal_lpdf(dz[i]| 0., 0.01),
-                              log(1. - spike_redshift_prob[i]) + normal_lpdf(dz[i]| photo_z0[i] - photo_spikez[i], photo_dz[i]));
-    }
+//    for (i in 1:n_photoz) {
+//        target += log_sum_exp(log(spike_redshift_prob[i]) + normal_lpdf(dz[i]| 0., 0.01),
+//                              log(1. - spike_redshift_prob[i]) + normal_lpdf(dz[i]| photo_z0[i] - photo_spikez[i], photo_dz[i]));
+//    }
 
     calibs_i ~ normal(0, 1);
 
@@ -619,9 +619,9 @@ model {
        beta_angle_blue ~ normal(0, 1);
     }
 
-    outl_mBx1c_uncertainties_mB ~ normal(0.5, 0.5);
-    outl_mBx1c_uncertainties_x1 ~ normal(3, 3);
-    outl_mBx1c_uncertainties_cB ~ normal(0.5, 0.5);
+    // outl_mBx1c_uncertainties_mB ~ normal(0.5, 0.5);
+    // outl_mBx1c_uncertainties_x1 ~ normal(3, 3);
+    // outl_mBx1c_uncertainties_cB ~ normal(0.5, 0.5);
     //outl_mBx1c_uncertainties_cR_unit ~ normal(10, 3);
     //sigma_int[1] ~ normal(0.02, 0.0001);
 
